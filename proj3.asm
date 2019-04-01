@@ -4,6 +4,7 @@
 
 .text
 
+#------------------------------------- STRING COMPARISON ------------------------------#
 strcmp:
 	lb $t0, 0($a0)
 	lb $t1, 0($a1)
@@ -57,29 +58,95 @@ strcmp.exit:
 	addi $sp, $sp, 4	# Allocates space on stack
 	
 	j return
+	
+#------------------------------------- FIND STRING ------------------------------#
 find_string:
-jr $ra
-
+	addi $sp, $sp, -4	# Allocates space on stack
+	sw $s0, 0($sp)		# Saved $s0 onto stack
+	move $s0, $ra		# Move $ra value to be saved
+find_string.exit:
+	move $ra, $s0		# Restore $ra value
+	lw $s0, 0($sp)		# Restore $s0 value
+	addi $sp, $sp, 4	# Allocates space on stack
+	
+	j return
+#------------------------------------- HASH ------------------------------#
 hash:
-jr $ra
-
+	addi $sp, $sp, -4	# Allocates space on stack
+	sw $s0, 0($sp)		# Saved $s0 onto stack
+	move $s0, $ra		# Move $ra value to be saved
+hash.exit:
+	move $ra, $s0		# Restore $ra value
+	lw $s0, 0($sp)		# Restore $s0 value
+	addi $sp, $sp, 4	# Allocates space on stack
+	
+	j return
+#------------------------------------- CLEAR ------------------------------#
 clear:
-jr $ra
-
+	addi $sp, $sp, -4	# Allocates space on stack
+	sw $s0, 0($sp)		# Saved $s0 onto stack
+	move $s0, $ra		# Move $ra value to be saved
+clear.exit:
+	move $ra, $s0		# Restore $ra value
+	lw $s0, 0($sp)		# Restore $s0 value
+	addi $sp, $sp, 4	# Allocates space on stack
+	
+	j return
+#------------------------------------- GET ------------------------------#
 get:
-jr $ra
-
+	addi $sp, $sp, -4	# Allocates space on stack
+	sw $s0, 0($sp)		# Saved $s0 onto stack
+	move $s0, $ra		# Move $ra value to be saved
+get.exit:
+	move $ra, $s0		# Restore $ra value
+	lw $s0, 0($sp)		# Restore $s0 value
+	addi $sp, $sp, 4	# Allocates space on stack
+	
+	j return
+#------------------------------------- PUT ------------------------------#
 put:
-jr $ra
-
+	addi $sp, $sp, -4	# Allocates space on stack
+	sw $s0, 0($sp)		# Saved $s0 onto stack
+	move $s0, $ra		# Move $ra value to be saved
+put.exit:
+	move $ra, $s0		# Restore $ra value
+	lw $s0, 0($sp)		# Restore $s0 value
+	addi $sp, $sp, 4	# Allocates space on stack
+	
+	j return
+#------------------------------------- DELETE ------------------------------#
 delete:
-jr $ra
-
+	addi $sp, $sp, -4	# Allocates space on stack
+	sw $s0, 0($sp)		# Saved $s0 onto stack
+	move $s0, $ra		# Move $ra value to be saved
+delete.exit:
+	move $ra, $s0		# Restore $ra value
+	lw $s0, 0($sp)		# Restore $s0 value
+	addi $sp, $sp, 4	# Allocates space on stack
+	
+	j return
+#------------------------------------- BUILD HASH TABLE ------------------------------#
 build_hash_table:
-jr $ra
-
+	addi $sp, $sp, -4	# Allocates space on stack
+	sw $s0, 0($sp)		# Saved $s0 onto stack
+	move $s0, $ra		# Move $ra value to be saved
+build_hash_table.exit:
+	move $ra, $s0		# Restore $ra value
+	lw $s0, 0($sp)		# Restore $s0 value
+	addi $sp, $sp, 4	# Allocates space on stack
+	
+	j return
+#------------------------------------- AUTOCORRECT ------------------------------#
 autocorrect:
-jr $ra
+	addi $sp, $sp, -4	# Allocates space on stack
+	sw $s0, 0($sp)		# Saved $s0 onto stack
+	move $s0, $ra		# Move $ra value to be saved
+autocorrect.exit:
+	move $ra, $s0		# Restore $ra value
+	lw $s0, 0($sp)		# Restore $s0 value
+	addi $sp, $sp, 4	# Allocates space on stack
+	
+	j return
 #------------------------------------- UTILS ------------------------------#
 return:
 	jr $ra
