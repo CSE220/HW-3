@@ -1,7 +1,7 @@
 .data
 v0: .asciiz "v0: "
-str1: .asciiz "ABCD"
-str2: .asciiz "ABA"
+str1: .asciiz ""
+str2: .asciiz ""
 
 .text
 .globl main
