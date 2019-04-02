@@ -12,12 +12,13 @@ Stony_Brook_University: .asciiz "Stony Brook University"
 oh: .asciiz "oh"
 ams: .asciiz "ams"
 hepl: .asciiz "hepl"
+class: .asciiz "class"
 
 .text
 .globl main
 main:
 la $a0, hash_table
-la $a1, ams
+la $a1, class
 jal hash
 move $t0, $v0
 

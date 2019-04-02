@@ -113,6 +113,24 @@ hash:
 	addi $sp, $sp, -4	# Allocates space on stack
 	sw $s0, 0($sp)		# Saved $s0 onto stack
 	move $s0, $ra		# Move $ra value to be saved
+	
+	li $v0, 0
+	lw $t0, 0($a0)
+	j hash.loop
+hash.loop:
+	lb $t1, 0($a1)
+	
+	beq $t1, 0, hash.modulus
+	
+	add $v0, $v0, $t1
+	addi $a1, $a1, 1
+	
+	j hash.loop
+hash.modulus:
+	div $v0, $t0
+	mfhi $v0
+	
+	j hash.exit
 hash.exit:
 	move $ra, $s0		# Restore $ra value
 	lw $s0, 0($sp)		# Restore $s0 value
