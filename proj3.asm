@@ -64,6 +64,44 @@ find_string:
 	addi $sp, $sp, -4	# Allocates space on stack
 	sw $s0, 0($sp)		# Saved $s0 onto stack
 	move $s0, $ra		# Move $ra value to be saved
+	
+	move $t2, $a0		# Keep base string address 
+	li $t3, 0		# Keep track of index
+	li $t4, 0		# Keep track of potential string index		
+	j find_string.check_word
+find_string.check_word:
+	lb $t0, 0($a1)
+	lb $t1, 0($t2)
+	
+	beq $t3, $a2, find_string.fail
+	bne $t0, $t1, find_string.jump_to_next_word
+	beq $t0, 0, find_string.found
+	
+	addi $a1, $a1, 1
+	addi $t2, $t2, 1
+	addi $t3, $t3, 1
+	
+	j find_string.check_word
+find_string.found:
+	move $v0, $t4
+	j find_string.exit
+find_string.jump_to_next_word:
+	lb $t0, 0($a1)
+	
+	addi $a1, $a1, 1
+	addi $t3, $t3, 1
+	move $t2, $a0
+	move $t4, $t3
+	beq $t0, '\0', find_string.check_word
+	j find_string.jump_to_next_word
+find_string.check_found:
+	bne $t1, 0, find_string.fail
+	
+	move $v0, $t4
+	j find_string.exit
+find_string.fail:
+	li $v0, -1
+	j find_string.exit
 find_string.exit:
 	move $ra, $s0		# Restore $ra value
 	lw $s0, 0($sp)		# Restore $s0 value
@@ -108,6 +146,11 @@ put:
 	addi $sp, $sp, -4	# Allocates space on stack
 	sw $s0, 0($sp)		# Saved $s0 onto stack
 	move $s0, $ra		# Move $ra value to be saved
+	
+	ble $a2, 2, put.error
+put.error:
+	li $v0, 2
+	j put.exit
 put.exit:
 	move $ra, $s0		# Restore $ra value
 	lw $s0, 0($sp)		# Restore $s0 value

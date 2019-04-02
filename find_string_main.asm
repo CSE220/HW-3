@@ -1,6 +1,6 @@
 .data
 v0: .asciiz "v0: "
-target: .asciiz "220"
+target: .asciiz "thanks"
 strings: .ascii "thanks\0thx\0CSE 220\0CSE 215\0can\0\0dm\0220\0help\0cna\0hepl\0"
 strings_length: .word 53
 
