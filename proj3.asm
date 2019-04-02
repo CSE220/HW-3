@@ -142,6 +142,23 @@ clear:
 	addi $sp, $sp, -4	# Allocates space on stack
 	sw $s0, 0($sp)		# Saved $s0 onto stack
 	move $s0, $ra		# Move $ra value to be saved
+	
+	sw $zero, 4($a0)	# Reset size
+	
+	lw $t0, 0($a0)		# Load capacity
+	addi $a0, $a0, 8	# Jump to first key
+	sll $t0, $t0, 1		# Multiply by two, since values and keys array are next to each other
+	li $t1, 0		# Iterator
+	j clear.loop		# Loop through keys and values array
+clear.loop:
+	beq $t1, $t0, clear.exit
+
+	sw $zero, 0($a0)	# Change value to 0
+	
+	addi $a0, $a0, 4
+	addi $t1, $t1, 1
+	
+	j clear.loop	
 clear.exit:
 	move $ra, $s0		# Restore $ra value
 	lw $s0, 0($sp)		# Restore $s0 value
