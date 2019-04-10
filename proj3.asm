@@ -167,13 +167,70 @@ clear.exit:
 	j return
 #------------------------------------- GET ------------------------------#
 get:
-	addi $sp, $sp, -4	# Allocates space on stack
-	sw $s0, 0($sp)		# Saved $s0 onto stack
+	addi $sp, $sp, -24	# Allocates space on stack
+	sw $s0, 20($sp)		# Saved $s0 onto stack
+	sw $s1, 16($sp)
+	sw $s2, 12($sp)
+	sw $s3, 8($sp)
+	sw $s4, 4($sp)
+	sw $s5, 0($sp)
+	sw $s6, 0($sp)
 	move $s0, $ra		# Move $ra value to be saved
+	move $s1, $a0		# Hash Table
+	move $s2, $a1		# Key
+	lb   $s3, 0($a0)	# Capacity
+	
+	jal hash		# Compute hash number
+	move $s4, $v0		# Hash value
+	move $s5, $zero		# Number of probes, exit when $s5 == $s3
+	
+	addi $s1, $s1, 8	# Jump to actual table
+	
+	move $t0, $s4
+	sll $t0, $t0, 2		
+	add $s1, $s1, $t0	# Advance to hash value index
+	
+	j get.search.check_loop_around
+get.search.check_loop_around:
+	sub $t0, $s3, $s4
+	bne $t0, $s5, get.search	# If probes not at end, keep going
+	
+	move $t1, $s3			# Else, loop back through hash table
+	sll $t1, $t1, 2
+	sub $s1, $s1, $t1
+	
+	j get.search
+get.search:
+	beq $s5, $s3, get.error
+
+	lw $a0, 0($s1)
+	move $a1, $s2
+	jal strcmp
+	beq $v0, 0, get.success
+	
+	addi $s1, $s1, 4
+	addi $s5, $s5, 1
+	j get.search.check_loop_around	
+get.error:
+	li $v0, -1
+	move $v1, $s5
+	j get.exit
+get.success:
+	add $v0, $s5, $s4
+	div $v0, $s3
+	mfhi $v0
+	
+	move $v1, $s5
+	j get.exit
 get.exit:
 	move $ra, $s0		# Restore $ra value
-	lw $s0, 0($sp)		# Restore $s0 value
-	addi $sp, $sp, 4	# Allocates space on stack
+	lw $s5, 0($sp)
+	lw $s4, 4($sp)
+	lw $s3, 8($sp)
+	lw $s2, 12($sp)		# Restore $s0 value
+	lw $s1, 16($sp)
+	lw $s0, 20($sp)
+	addi $sp, $sp, 24	# Allocates space on stack
 	
 	j return
 #------------------------------------- PUT ------------------------------#

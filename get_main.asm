@@ -6,7 +6,7 @@ v1: .asciiz "v1: "
 hash_table:
 .word 7
 .word 5
-.word s101, ams, 0, 0, kk, thx, yuo
+.word ams, s101, 0, 0, kk, thx, yuo
 .word CSE101, Applied_Mathematics, 0, 0, OK_thanks, thanks, you
 
 # There are some extra strings here you can work with. Or add your own!
@@ -38,7 +38,7 @@ usb: .asciiz "usb"
 .globl main
 main:
 la $a0, hash_table
-la $a1, ams
+la $a1, yuo
 jal get
 move $t0, $v0
 move $t1, $v1
