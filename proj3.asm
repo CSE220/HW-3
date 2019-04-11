@@ -204,6 +204,7 @@ get.search:
 	beq $s5, $s3, get.error
 
 	lw $a0, 0($s1)
+	beq $a0, 0, get.error
 	move $a1, $s2
 	jal strcmp
 	beq $v0, 0, get.success
@@ -235,18 +236,92 @@ get.exit:
 	j return
 #------------------------------------- PUT ------------------------------#
 put:
-	addi $sp, $sp, -4	# Allocates space on stack
-	sw $s0, 0($sp)		# Saved $s0 onto stack
+	addi $sp, $sp, -16	# Allocates space on stack
+	sw $s0, 12($sp)		# Saved $s0 onto stack
+	sw $s1, 8($sp)
+	sw $s2, 4($sp)
+	sw $s3, 0($sp)
 	move $s0, $ra		# Move $ra value to be saved
+	move $s1, $a0		# Hash table
+	move $s2, $a1		# Key
+	move $s3, $a2		# Value
 	
-	ble $a2, 2, put.error
-put.error:
-	li $v0, 2
+	jal get
+	beq $v0, -1, put.not_found
+	
+	move $t0, $v0		# Index of found element
+	sll $t0, $t0, 2		# Multiply by 4 to get right index
+	lw $t1, 0($s1)		# Capacity of hash table
+	
+	addi $s1, $s1, 8	# Jump ahead to actual hash table
+	add $s1, $s1, $t0	# Move to key
+	sw $s2, 0($s1)
+	add $s1, $s1, $t1	# Jump ahead to value
+	sw $s3, 0($s1)
+	
+	j put.exit
+put.not_found:
+	lw $t0, 0($s1)
+	lw $t1, 4($s1)
+	beq $t0, $t1, put.full
+	
+	move $a0, $s1
+	move $a1, $s2
+	jal hash	# Compute hash of key
+	
+	lw $t0, 0($s1)		# Get capacity
+	move $t1, $v0		# Hash index
+	sub $t2, $t0, $t1	# Limit to loop back
+	move $t3, $zero		# Iterator for number of probes
+	
+	sll $v0, $v0, 2
+	addi $s1, $s1, 8	# Jump ahead to actual hash table
+	add $s1, $s1, $v0	# Jump ahead to start at hash
+	
+	j put.loop.check_loop_around
+put.loop.check_loop_around:
+	sub $t5, $t0, $t1
+	bne $t3, $t5, put.loop	# If probes not at end, keep going
+	
+	move $t6, $t0			# Else, loop back through hash table
+	sll $t6, $t6, 2
+	sub $s1, $s1, $t6
+	
+	j put.loop
+put.loop:
+	lw $t4, 0($s1)
+	beq $t4, 0, put.insert
+	beq $t4, 1, put.insert
+	
+	addi $t3, $t3, 1
+	addi $s1, $s1, 4
+	j put.loop.check_loop_around
+put.insert:
+	sw $s2, 0($s1)	# Insert key
+	move $t9, $t0
+	sll $t9, $t9, 2
+	add $s1, $s1, $t9
+	sw $s3, 0($s1)	# Insert value
+	j put.end
+put.end:
+	add $v0, $t1, $t3
+	div $v0, $t0
+	mfhi $t9
+	move $v0, $t9
+	move $v1, $t3
+	
+	j put.exit	
+put.full:
+	li $v0, -1
+	li $v1, -1
 	j put.exit
 put.exit:
 	move $ra, $s0		# Restore $ra value
-	lw $s0, 0($sp)		# Restore $s0 value
-	addi $sp, $sp, 4	# Allocates space on stack
+	lw $s3, 0($sp)
+	lw $s2, 4($sp)
+	lw $s1, 8($sp)
+	lw $s0, 12($sp)		# Restore $s0 value
+	addi $sp, $sp, 16	# Allocates space on stack
 	
 	j return
 #------------------------------------- DELETE ------------------------------#

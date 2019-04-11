@@ -5,7 +5,7 @@ v1: .asciiz "v1: "
 hash_table:
 .word 7
 .word 4
-.word 0, bsu, usb, 0, kk, oh, 0
+.word 0, you, you, you, you, you, you
 .word 0, Boise_State_University, Universal_Serial_Bus, 0, OK_thanks, OH, 0
 
 you: .asciiz "you"
@@ -58,8 +58,8 @@ calss: .asciiz "calss"
 .globl main
 main:
 la $a0, hash_table
-la $a1, sbu
-la $a2, Stony_Brook_University
+la $a1, usb
+la $a2, Universal_Serial_Bus
 jal put
 move $t0, $v0
 move $t1, $v1
