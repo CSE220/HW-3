@@ -367,13 +367,36 @@ delete.exit:
 	j return
 #------------------------------------- BUILD HASH TABLE ------------------------------#
 build_hash_table:
-	addi $sp, $sp, -4	# Allocates space on stack
-	sw $s0, 0($sp)		# Saved $s0 onto stack
+	addi $sp, $sp, -24	# Allocates space on stack
+	sw $s0, 20($sp)		# Saved $s0 onto stack
+	sw $s1, 16($sp)
+	sw $s2, 12($sp)
+	sw $s3, 8($sp)
+	sw $s4, 4($sp)
+	sw $s5, 0($sp)
 	move $s0, $ra		# Move $ra value to be saved
+	move $s1, $a0		# Hash Table
+	move $s2, $a1		# Strings
+	move $s3, $a2		# Length of strings
+	move $s4, $a3		# Filename
+	move $s5, $zero		# Iterator
+	
+	move $a0, $s1
+	jal clear	# Clear Hash Table
+	
+	move $a0, $s4	# Open File
+	li $v0, 13
+	syscall
+	
 build_hash_table.exit:
 	move $ra, $s0		# Restore $ra value
-	lw $s0, 0($sp)		# Restore $s0 value
-	addi $sp, $sp, 4	# Allocates space on stack
+	lw $s5, 0($sp)
+	lw $s4, 4($sp)
+	lw $s3, 8($sp)
+	lw $s2, 12($sp)
+	lw $s1, 16($sp)
+	lw $s0, 20($sp)		# Restore $s0 value
+	addi $sp, $sp, 24	# Allocates space on stack
 	
 	j return
 #------------------------------------- AUTOCORRECT ------------------------------#
