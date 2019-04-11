@@ -326,13 +326,43 @@ put.exit:
 	j return
 #------------------------------------- DELETE ------------------------------#
 delete:
-	addi $sp, $sp, -4	# Allocates space on stack
-	sw $s0, 0($sp)		# Saved $s0 onto stack
+	addi $sp, $sp, -8	# Allocates space on stack
+	sw $s0, 4($sp)		# Saved $s0 onto stack
+	sw $s1, 0($sp)
 	move $s0, $ra		# Move $ra value to be saved
+	move $s1, $a0
+	
+	lw $t0, 4($a0)
+	beq $t0, 0, delete.empty
+	
+	jal get
+	beq $v0, -1, delete.exit
+	
+	lw $t0, 4($s1)
+	addi $t0, $t0, -1
+	sw $t0, 4($s1)
+	
+	lw $t1, 0($s1)	# Load capacity
+	sll $t1, $t1, 2	# Get capacity jump
+	sll $t0, $v0, 2	# Get hash jump
+	
+	addi $s1, $s1, 8	# Jump to actual table
+	add $s1, $s1, $t0	# Jump to hash
+	sw $zero, 0($s1)
+	add $s1, $s1, $t1	# Jump to value
+	sw $zero, 0($s1)
+	
+	j delete.exit
+	
+delete.empty:
+	li $v0, -1
+	li $v1, 0
+	j delete.exit
 delete.exit:
 	move $ra, $s0		# Restore $ra value
-	lw $s0, 0($sp)		# Restore $s0 value
-	addi $sp, $sp, 4	# Allocates space on stack
+	lw $s1, 0($sp)
+	lw $s0, 4($sp)		# Restore $s0 value
+	addi $sp, $sp, 8	# Allocates space on stack
 	
 	j return
 #------------------------------------- BUILD HASH TABLE ------------------------------#
