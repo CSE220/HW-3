@@ -252,6 +252,7 @@ put:
 	move $t0, $v0		# Index of found element
 	sll $t0, $t0, 2		# Multiply by 4 to get right index
 	lw $t1, 0($s1)		# Capacity of hash table
+	sll $t1, $t1, 2		# Multiply by 4 to get right index
 	
 	addi $s1, $s1, 8	# Jump ahead to actual hash table
 	add $s1, $s1, $t0	# Move to key
@@ -367,36 +368,125 @@ delete.exit:
 	j return
 #------------------------------------- BUILD HASH TABLE ------------------------------#
 build_hash_table:
-	addi $sp, $sp, -24	# Allocates space on stack
-	sw $s0, 20($sp)		# Saved $s0 onto stack
-	sw $s1, 16($sp)
-	sw $s2, 12($sp)
-	sw $s3, 8($sp)
-	sw $s4, 4($sp)
-	sw $s5, 0($sp)
+	addi $sp, $sp, -32	# Allocates space on stack
+	sw $s0, 28($sp)		# Saved $s0 onto stack
+	sw $s1, 24($sp)
+	sw $s2, 20($sp)
+	sw $s3, 16($sp)
+	sw $s4, 12($sp)
+	sw $s5, 8($sp)
+	sw $s6, 4($sp)
+	sw $s7, 0($sp)		# Temporary storage for key index value
 	move $s0, $ra		# Move $ra value to be saved
 	move $s1, $a0		# Hash Table
 	move $s2, $a1		# Strings
 	move $s3, $a2		# Length of strings
 	move $s4, $a3		# Filename
-	move $s5, $zero		# Iterator
+	move $s5, $zero		# Iterator for # of elements inserted
 	
 	move $a0, $s1
 	jal clear	# Clear Hash Table
 	
 	move $a0, $s4	# Open File
+	move $a1, $zero
 	li $v0, 13
 	syscall
+	beq $v0, -1, build_hash_table.exit # If no file, exit
+	move $s6, $v0	# Save file descriptor
 	
+	j build_hash_table.read_key
+build_hash_table.read_key:
+	addi $sp, $sp, -80
+	move $t0, $sp	# Temporary input buffer
+	move $t1, $sp	# Starting address of temporary input buffer
+	j build_hash_table.loop_key
+build_hash_table.loop_key:
+	move $a0, $s6	# Load file descriptor
+	move $a1, $t0	# Temporary input buffer
+	li $a2, 1	# Read character by character
+	li $v0, 14
+	syscall
+	
+	beq $v0, 0, build_hash_table.done
+	
+	lb $t2, 0($t0)
+	beq $t2, ' ', build_hash_table.parse_key
+	addi $t0, $t0, 1
+	j build_hash_table.loop_key	
+build_hash_table.parse_key:
+	li $t5, '\0'
+	sb $t5, 0($t0)	# Change space to null terminator
+	move $a0, $t1
+	move $a1, $s2
+	move $a2, $s3
+	jal find_string
+	move $s7, $v0		# Store key address so not erased for value search
+	
+	j build_hash_table.read_value	
+build_hash_table.read_value:
+	addi $sp, $sp, -80
+	move $t0, $sp	# Temporary input buffer
+	move $t1, $sp	# Starting address of temporary input buffer
+	j build_hash_table.loop_value
+build_hash_table.loop_value:
+	move $a0, $s6	# Load file descriptor
+	move $a1, $t0	# Temporary input buffer
+	li $a2, 1	# Read character by character
+	li $v0, 14
+	syscall
+	
+	lb $t2, 0($t0)
+	beq $t2, '\n', build_hash_table.parse_value
+	addi $t0, $t0, 1
+	j build_hash_table.loop_value	
+build_hash_table.parse_value:
+	li $t5, '\0'
+	sb $t5, 0($t0)	# Change \n to null terminator
+	move $a0, $t1
+	move $a1, $s2
+	move $a2, $s3
+	jal find_string
+	j build_hash_table.insert
+build_hash_table.insert:
+	move $a0, $s1
+	move $a1, $s7	# Restore key from storage
+	add $a1, $a1, $s1
+	addi $a1, $a1, 8
+	move $a2, $v0	# Move value index here
+	add $a2, $a2, $s1
+	addi $a2, $a2, 8 
+	
+	jal put
+	addi $s5, $s5, 1
+	addi $sp, $sp, 160	# Deallocate space
+	
+	move $a0, $s5
+	li $v0, 1
+	syscall
+	
+	li $a0, ' '
+	li $v0, 11
+	syscall
+	
+	j build_hash_table.read_key
+build_hash_table.done:
+	move $a0, $s6	# Close file
+	li $v0, 16
+	syscall
+	
+	move $v0, $s5	# Number of inserted elements
+	j build_hash_table.exit
 build_hash_table.exit:
 	move $ra, $s0		# Restore $ra value
-	lw $s5, 0($sp)
-	lw $s4, 4($sp)
-	lw $s3, 8($sp)
-	lw $s2, 12($sp)
-	lw $s1, 16($sp)
-	lw $s0, 20($sp)		# Restore $s0 value
-	addi $sp, $sp, 24	# Allocates space on stack
+	lw $s7, 0($sp)
+	lw $s6, 4($sp)
+	lw $s5, 8($sp)
+	lw $s4, 12($sp)
+	lw $s3, 16($sp)
+	lw $s2, 20($sp)
+	lw $s1, 24($sp)
+	lw $s0, 28($sp)		# Restore $s0 value
+	addi $sp, $sp, 32	# Allocates space on stack
 	
 	j return
 #------------------------------------- AUTOCORRECT ------------------------------#
