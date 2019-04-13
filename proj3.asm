@@ -417,6 +417,7 @@ build_hash_table.loop_key:
 build_hash_table.parse_key:
 	li $t5, '\0'
 	sb $t5, 0($t0)	# Change space to null terminator
+	
 	move $a0, $t1
 	move $a1, $s2
 	move $a2, $s3
@@ -447,22 +448,26 @@ build_hash_table.parse_value:
 	move $a1, $s2
 	move $a2, $s3
 	jal find_string
+	move $t7, $v0
 	j build_hash_table.insert
 build_hash_table.insert:
 	move $a0, $s1
 	move $a1, $s7	# Restore key from storage
-	add $a1, $a1, $s1
-	addi $a1, $a1, 8
-	move $a2, $v0	# Move value index here
-	add $a2, $a2, $s1
-	addi $a2, $a2, 8 
+	add $a1, $a1, $s2
 	
+	move $a2, $t7	# Move value index here
+	add $a2, $a2, $s2
+
+	move $a0, $s1	
 	jal put
+	
 	addi $s5, $s5, 1
-	addi $sp, $sp, 160	# Deallocate space
+	addi $sp, $sp, 80	# Deallocate space
+	addi $sp, $sp, 80	# Deallocate space
 
 	j build_hash_table.read_key
 build_hash_table.done:
+	addi $sp, $sp, 80	# Deallocate space
 	move $a0, $s6	# Close file
 	li $v0, 16
 	syscall
@@ -486,39 +491,106 @@ build_hash_table.exit:
 autocorrect:
 	lw $t0, 0($sp)		# Get string length
 	lw $t1, 4($sp)		# Get filename
-	addi $sp, $sp, -28	# Allocates space on stack
-	sw $s0, 24($sp)		# Saved $s0 onto stack
-	sw $s1, 20($sp)
-	sw $s2, 16($sp)
-	sw $s3, 12($sp)
-	sw $s4, 8($sp)
-	sw $s5, 4($sp)
-	sw $s6, 0($sp)
+	addi $sp, $sp, -32	# Allocates space on stack
+	sw $s0, 28($sp)		# Saved $s0 onto stack
+	sw $s1, 24($sp)
+	sw $s2, 20($sp)
+	sw $s3, 16($sp)
+	sw $s4, 12($sp)
+	sw $s5, 8($sp)	# Used
+	sw $s6, 4($sp)
+	sw $s7, 0($sp)	# Used
+	
 	move $s0, $ra		# Move $ra value to be saved
 	move $s1, $a0		# Hash Table
 	move $s2, $a1		# Source string
 	move $s3, $a2		# Destination string
-	move $s4, $a3		# Strings
-	move $s5, $t0		# String length
-	move $s6, $t1		# Filename
+	move $s4, $zero		# Iterator for number of replacements
+	move $s7, $zero		# Flag for if we are at last word
 	
 	move $a0, $s1
-	move $a1, $s4
-	move $a2, $s5
-	move $a3, $s6
+	move $a1, $a3
+	move $a2, $t0
+	move $a3, $t1
 	jal build_hash_table
 	
+	lw $s6, 0($s1)		# Load capacity
+	sll $s6, $s6, 2		# Amount to jump to go from key -> value
 	
+	j autocorrect.next_source_word_setup
+autocorrect.next_source_word_setup:
+	move $s5, $s2	# Store starting address of word
+	j autocorrect.next_source_word
+autocorrect.next_source_word:
+	lb $t0, 0($s2)
+	beq $t0, ' ', autocorrect.check_replaceable
+	beq $t0, '\0', autocorrect.flag_last_word
+	
+	addi $s2, $s2, 1
+	j autocorrect.next_source_word
+autocorrect.flag_last_word:
+	li $s7, 1	# Flag now so we know later in program to stop
+	j autocorrect.check_replaceable
+autocorrect.check_replaceable:
+	sb $zero, 0($s2)	# Temporarily change space to \0 for get
+	
+	move $a0, $s1
+	move $a1, $s5		# Load starting address of word
+	jal get
+	bne $v0, -1, autocorrect.get_replace_word
+
+	move $t2, $s5	# Need move to $t2 to write string
+	j autocorrect.write_string
+autocorrect.get_replace_word:
+	addi $s4, $s4, 1	# Increase replace count by 1
+
+	move $t1, $s1	     # Load hash table
+	addi $t1, $t1, 8     # Jump to actual hash table
+	sll $v0, $v0, 2
+	add $t1, $t1, $v0    # Jump to key
+	add $t1, $t1, $s6    # Jump to value
+	lw $t2, 0($t1)	     # Store value string into $t2
+	
+	j autocorrect.write_string
+autocorrect.write_string:
+	lb $t3, 0($t2)
+	beq $t3, 0, autocorrect.end_replace_word
+	
+	sb $t3, 0($s3)	# Write to dest string
+	
+	addi $s3, $s3, 1
+	addi $t2, $t2, 1
+	
+	j autocorrect.write_string
+autocorrect.end_replace_word:
+	beq $s7, 1, autocorrect.end_replace_last_word
+	li $t0, ' '
+	sb $t0, 0($s3)
+	addi $s3, $s3, 1
+	sb $t0, 0($s2)
+	addi $s2, $s2, 1
+	
+	j autocorrect.next_source_word_setup
+autocorrect.end_replace_last_word:
+	li $t0, '\0'
+	sb $t0, 0($s3)
+	sb $t0, 0($s2)
+	
+	j autocorrect.finish
+autocorrect.finish:
+	move $v0, $s4
+	j autocorrect.exit
 autocorrect.exit:
 	move $ra, $s0		# Restore $ra value
-	lw $s6, 0($sp)
-	lw $s5, 4($sp)
-	lw $s4, 8($sp)
-	lw $s3, 12($sp)
-	lw $s2, 16($sp)
-	lw $s1, 20($sp)
-	lw $s0, 24($sp)		# Restore $s0 value
-	addi $sp, $sp, 28	# Allocates space on stack
+	lw $s7, 0($sp)
+	lw $s6, 4($sp)
+	lw $s5, 8($sp)
+	lw $s4, 12($sp)
+	lw $s3, 16($sp)
+	lw $s2, 20($sp)
+	lw $s1, 24($sp)
+	lw $s0, 28($sp)		# Restore $s0 value
+	addi $sp, $sp, 32	# Allocates space on stack
 	
 	j return
 #------------------------------------- UTILS ------------------------------#

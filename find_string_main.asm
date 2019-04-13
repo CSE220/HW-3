@@ -1,8 +1,8 @@
 .data
 v0: .asciiz "v0: "
-target: .asciiz "yuo"
-strings: .ascii "wat\0class range\0usb\0I\0gg\0price hose\0hmmmm\0disimprison\0can\0hmm\0Applied Mathematics\0defuze\0Universal Serial Bus\0jazzy\0inapprehensiveness\0OK thanks\0what\0good game\0giftless\0rotate\0sillllllly\0hartselle\0thx\0succinct street\0brockport\0Boise State University\0silly\0class\0billhead\0first floor\0sub\0languid lip\0Stony Brook\0CSE101\0OH\0MIPS\0colorado\0cs\0yuo\0calss\0able\0oh\0help\0sbu\0Stony Brook University\0imbark\0kuwait\0i\0receipt marble\0kk\0MIPSR10000\0fido\0teddy\0second-hand skate\0bsu\0sto\0conclave\0you\0melrose\0subtraction\0altarage\0hepl\0220\0you\0orange clam\0class brush\0Computer Science\0101\0CSE 220 is da best\0argh\0arrgghh\0zebra fruit\0onions\0u\0thanks\0Uni\0cyclamycin\0CSE 220\0ams\0cna\0"
-strings_length: .word 661
+target: .asciiz "what"
+strings: .ascii "kk\0cs\0Stony Brook University\0what\0yuo\0CSE 220\0argh\0oh\0OK thanks\0arrgghh\0u\0101\0hmmmm\0good game\0Universal Serial Bus\0you\0help\0sto\0gg\0Stony Brook\0subtraction\0Boise State University\0thx\0OH\0silly\0sillllllly\0thanks\0hepl\0hmm\0can\0usb\0wat\0calss\0sbu\0220\0MIPS\0class\0CSE101\0Applied Mathematics\0ams\0bsu\0i\0cna\0MIPSR10000\0sub\0you\0Computer Science\0I\0"
+strings_length: .word 334
 
 .text
 .globl main

@@ -13,6 +13,7 @@
 
 .data
 v0: .asciiz "v0: "
+usb: .asciiz "usb"
 
 hash_table:
 .word 29
@@ -32,6 +33,10 @@ la $a1, strings
 lw $a2, strings_length
 la $a3, filename
 jal build_hash_table
+
+la $a0, hash_table
+la $a1, usb
+jal get
 move $t0, $v0
 
 la $a0, v0
